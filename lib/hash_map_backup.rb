@@ -7,7 +7,6 @@ class HashMap
   def initialize(num_buckets = 8)
     @store = Array.new(num_buckets) { LinkedList.new }
     @count = 0
-    @ordered = []
   end
 
   def include?(key)
@@ -17,29 +16,24 @@ class HashMap
 
   def set(key, val)
     resize! if @count == num_buckets
-    @ordered << [key, val]
-    link = bucket(key).insert(key, @ordered.length - 1)
+    bucket(key).insert(key, val)
     @count += 1
   end
 
   def get(key)
-    idx = bucket(key).get(key)
-    return nil unless idx
-    @ordered[idx][1]
+    bucket(key).get(key)
   end
 
   def delete(key)
-    idx = bucket(key).remove(key)
-    @ordered[idx] = nil
+    bucket(key).remove(key)
     @count -= 1
   end
 
   def each(&prc)
-    @ordered.compact.each_with_index do |arr, idx|
-      # linklist.each do |link|
-      #   prc.call(link.key, link.val)
-      # end
-      prc.call(arr[0], arr[1], idx)
+    @store.reverse.each do |linklist|
+      linklist.each do |link|
+        prc.call(link.key, link.val)
+      end
     end
     self
   end
@@ -63,8 +57,8 @@ class HashMap
 
   def resize!
     resized = Array.new(num_buckets * 2) { LinkedList.new }
-    each do |key, val, idx|
-      resized[key.hash % resized.size].insert(key, idx)
+    each do |key, val|
+      resized[key.hash % resized.size].insert(key, val)
     end
     @store = resized
   end
